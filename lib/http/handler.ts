@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AppError } from "./errors";
 
-type Ctx = { params: Promise<Record<string, string>> };
+type Ctx = { params: Promise<Record<string, string | string[]>> };
 type Handler = (req: Request, ctx: Ctx) => Promise<Response>;
 
 export function ok<T>(data: T, status = 200, meta?: unknown) {
@@ -44,8 +44,8 @@ export async function readJson(req: Request): Promise<unknown> {
   }
 }
 
-export function parseId(raw: string): number {
-  if (!/^\d+$/.test(raw) || Number(raw) > Number.MAX_SAFE_INTEGER) {
+export function parseId(raw: string | string[]): number {
+  if (typeof raw !== "string" || !/^\d+$/.test(raw) || Number(raw) > Number.MAX_SAFE_INTEGER) {
     throw new AppError(400, "BAD_REQUEST", "Request id must be a positive integer");
   }
   return Number(raw);

@@ -2,6 +2,12 @@
 // Usage: npm run dev (in one terminal), then npm run check:rules
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 
+interface Body {
+  data?: { id: number; reference: string };
+  error?: { code?: string };
+  meta?: unknown;
+}
+
 let failures = 0;
 
 async function call(method: string, path: string, body?: unknown) {
@@ -11,11 +17,11 @@ async function call(method: string, path: string, body?: unknown) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
-  const json = text ? JSON.parse(text) : null;
+  const json: Body | null = text ? JSON.parse(text) : null;
   return { status: res.status, json };
 }
 
-function expect(name: string, actual: { status: number; json: any }, status: number, code?: string) {
+function expect(name: string, actual: { status: number; json: Body | null }, status: number, code?: string) {
   const okStatus = actual.status === status;
   const okCode = code === undefined || actual.json?.error?.code === code;
   if (okStatus && okCode) {
@@ -24,6 +30,11 @@ function expect(name: string, actual: { status: number; json: any }, status: num
     failures++;
     console.log(`  FAIL  ${name}: expected ${status} ${code ?? ""}, got ${actual.status} ${JSON.stringify(actual.json)}`);
   }
+}
+
+function created(res: { json: Body | null }) {
+  if (!res.json?.data) throw new Error("expected a created request in the response");
+  return res.json.data;
 }
 
 const unique = Date.now().toString(36);
@@ -40,8 +51,8 @@ async function main() {
   console.log("Rule 1: status flow");
   const a = await call("POST", "/api/requests", base("A"));
   expect("create", a, 201);
-  const id = a.json.data.id;
-  expect("reference is generated", { status: /^RD-\d{6}$/.test(a.json.data.reference) ? 201 : 0, json: null }, 201);
+  const id = created(a).id;
+  expect("reference is generated", { status: /^RD-\d{6}$/.test(created(a).reference) ? 201 : 0, json: null }, 201);
   expect("open -> completed refused", await call("POST", `/api/requests/${id}/transition`, { to: "completed" }), 409, "ILLEGAL_TRANSITION");
   expect("open -> rejected refused", await call("POST", `/api/requests/${id}/transition`, { to: "rejected" }), 409, "ILLEGAL_TRANSITION");
   expect("open -> in_review", await call("POST", `/api/requests/${id}/transition`, { to: "in_review" }), 200);
@@ -68,8 +79,8 @@ async function main() {
   expect("same item allowed after completion", done, 201);
 
   console.log("Rule 5: removal");
-  expect("remove open", await call("DELETE", `/api/requests/${b.json.data.id}`), 204);
-  expect("removed is not fetchable", await call("GET", `/api/requests/${b.json.data.id}`), 404, "NOT_FOUND");
+  expect("remove open", await call("DELETE", `/api/requests/${created(b).id}`), 204);
+  expect("removed is not fetchable", await call("GET", `/api/requests/${created(b).id}`), 404, "NOT_FOUND");
   expect("item slot freed after removal", await call("POST", "/api/requests", base("B")), 201);
 
   console.log("Errors and edge cases");
