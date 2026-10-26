@@ -1,4 +1,7 @@
-import { Pool } from "pg";
+import { Pool, types } from "pg";
+
+// BIGINT ids and COUNT(*) fit safely in a JS number for this app.
+types.setTypeParser(20, (v) => parseInt(v, 10));
 
 const globalForPg = globalThis as unknown as { pgPool?: Pool };
 

@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
-    "db:setup": "npm run db:migrate && npm run db:seed"
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "check:rules": "tsx scripts/check-rules.ts"
   },
   "dependencies": {
     "next": "16.4.3",
