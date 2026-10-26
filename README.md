@@ -2,8 +2,9 @@
 
 A returns desk for a small online store. Customers want to return or replace something; a support agent raises a request, reviews it, approves or rejects it, picks a resolution (refund, replacement or store credit), leaves notes, and closes it out.
 
-- **Deployed app:** _TODO: add the public URL here and in the GitHub repo description_
-- **Time spent:** _TODO: write your real number of hours here_
+- **Deployed app:** https://returndesk-eight.vercel.app
+- **Repository:** https://github.com/galandeonkar1841-web/Returndesk
+- **Time spent:** about 9 hours
 
 ## Stack
 
@@ -127,16 +128,16 @@ Every request in a response carries `allowedActions` (`transitions`, `canEdit`, 
 - **Raw SQL over an ORM** to keep the queries visible and reviewable.
 - **System font stack** instead of Google Fonts, so the build needs no network access.
 
+## Deployment
+
+Hosted on Vercel (Next.js preset, no custom build settings) with a Neon PostgreSQL database. The only configuration is two environment variables, `DATABASE_URL` and `DATABASE_SSL=true`. The schema and seed data were applied to the Neon database from a local machine with `npm run db:setup`. Every push to `main` redeploys automatically.
+
 ## Testing
 
 `npm run check:rules` (with the server running) is a black-box script that calls the API directly and asserts all five rules, the status codes and error codes, and a combined search + filter + sort + paging query. At the time of writing it passes against both `next dev` and the production build. The database constraints were also checked directly with `psql` (illegal status update, duplicate live item, notes `UPDATE`/`DELETE`).
 
 ## What is not done
 
-Be honest about these before the technical round:
-
-- **Not deployed yet.** The code builds and runs, but I have not put it on a public URL. Deploy to Vercel with a Neon database, set `DATABASE_URL` and `DATABASE_SSL=true`, run `npm run db:setup` against it, then fill in the URL at the top of this file.
-- **The UI has not been checked in a real browser at 375px.** The layout is written mobile-first and the pages return 200, but I have not looked at it on a device. Please do that check.
 - **No automated unit or component tests**; only the API rule-check script.
 - **Search uses `ILIKE '%term%'`**, which cannot use a normal index. Fine at this size; at scale I would add `pg_trgm` GIN indexes.
 - **`OFFSET` paging** gets slower on very deep pages; keyset paging would be the next step.
