@@ -64,7 +64,7 @@ CREATE INDEX idx_notes_request ON notes (request_id, created_at, id);
 -- Notes are append-only: block UPDATE and DELETE at the database level.
 CREATE FUNCTION notes_are_immutable() RETURNS trigger AS $$
 BEGIN
-  RAISE EXCEPTION 'notes are append-only and cannot be % ', lower(TG_OP);
+  RAISE EXCEPTION 'notes are append-only and cannot be %', lower(TG_OP);
 END;
 $$ LANGUAGE plpgsql;
 
